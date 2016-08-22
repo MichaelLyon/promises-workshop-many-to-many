@@ -18,6 +18,7 @@ function Authors_Books() {
 
 
 router.get('/', function(req, res, next) {
+  
   // get all authors from Authors
   // THEN for each author, go get all of their book ids from Authors_Books
   // THEN go get all that author's books
@@ -64,11 +65,16 @@ router.post('/:id/delete', function (req, res, next) {
 })
 
 router.get('/:id/edit', function (req, res, next) {
-  // find the author in Authors
-  // get all of the authors book_ids from Authors_Books
-  // get all of the authors books from BOOKs
-  // render the corresponding template
-  // use locals to pass books and author to the view
+  Authors().where('id',req.params.id).first().then(function(author){
+    console.log(author);
+    Authors_Books().where('author_id', author.id).pluck('book_id').then(function(bookId){
+      console.log(bookId);
+      Books().whereIn('id',bookId).then(function(books){
+        console.log(books);
+        res.render('authors/edit',{books:books, author:author, author_books:books})
+      })
+    })
+  })
 })
 
 router.post('/:id', function (req, res, next) {
@@ -83,11 +89,13 @@ router.post('/:id', function (req, res, next) {
 })
 
 router.get('/:id', function (req, res, next) {
-  // find the author in Authors
-  // get all of the authors book_ids from Authors_Books
-  // get all of the authors books from BOOKs
-  // render the corresponding template
-  // use locals to pass books and author to the view
+  Authors().where('id',req.params.id).first().then(function(author) {
+    Authors_Books().where('author_id', author.id).pluck('book_id').then(function(book){
+      Books().whereIn('id', book).then(function(books){
+        res.render('authors/show',{books:books, author:author})
+      })
+    })
+  })
 })
 
 module.exports = router;
