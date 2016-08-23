@@ -18,7 +18,20 @@ function Authors_Books() {
 
 
 router.get('/', function(req, res, next) {
-  
+  Authors().then(function(authors){
+    Promise.all(
+      authors.map(function(author){
+        return knex('authors_books').where('author_id', author.id).pluck('book_id').then(function(bookIdArray){
+          return knex('books').whereIn('id', bookIdArray).then(function(books) {
+            author.books = books
+            return author;
+          })
+        })
+      })
+    ).then(function(authors){
+      res.render('authors/index.jade', {authors : authors})
+    })
+  })
   // get all authors from Authors
   // THEN for each author, go get all of their book ids from Authors_Books
   // THEN go get all that author's books
@@ -66,11 +79,8 @@ router.post('/:id/delete', function (req, res, next) {
 
 router.get('/:id/edit', function (req, res, next) {
   Authors().where('id',req.params.id).first().then(function(author){
-    console.log(author);
     Authors_Books().where('author_id', author.id).pluck('book_id').then(function(bookId){
-      console.log(bookId);
       Books().whereIn('id',bookId).then(function(books){
-        console.log(books);
         res.render('authors/edit',{books:books, author:author, author_books:books})
       })
     })
