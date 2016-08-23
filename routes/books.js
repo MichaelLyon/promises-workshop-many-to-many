@@ -16,7 +16,20 @@ function Authors() {
 }
 
 router.get('/', function(req, res, next) {
-  // your code here
+  Books().then(function(books){
+    Promise.all(
+      books.map(function(book){
+        return Authors_Books().where('id',book.id).pluck('author_id').then(function(authorId){
+          return Authors().whereIn('id', authorId).then(function(author){
+            book.authors = author
+            return book;
+          })
+        })
+      })
+    ).then(function(books){
+      res.render('books/index.jade', {books:books})
+    })
+  })
 });
 
 router.get('/new', function(req, res, next) {
@@ -39,7 +52,13 @@ router.post('/', function (req, res, next) {
 })
 
 router.get('/:id/delete', function(req, res, next) {
-  // your code here
+  Books().where('id', req.params.id).first().then(function(book){
+    Authors_Books().where('id', book.id).pluck('author_id').then(function(authorIds){
+      Authors().whereIn('id',authorIds).then(function(authors){
+        res.render('books/delete', {authors: authors, book: book})
+      })
+    })
+  })
 });
 
 router.post('/:id/delete', function(req, res, next) {
@@ -55,7 +74,13 @@ router.get('/:id/edit', function(req, res, next) {
 });
 
 router.get('/:id', function(req, res, next) {
-  // your code here 
+  Books().where('id',req.params.id).first().then(function(book){
+    Authors_Books().where('book_id', book.id).pluck('author_id').then(function(authorArray){
+        Authors().whereIn('id', authorArray).then(function(author){
+          res.render('books/show', {authors: author, book : book})
+        })
+    })
+  })
 });
 
 router.post('/:id', function(req, res, next) {

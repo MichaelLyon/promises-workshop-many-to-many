@@ -16,13 +16,15 @@ function Authors_Books() {
   return knex('authors_books');
 }
 
+// Authors_Books();
+// Books();
 
 router.get('/', function(req, res, next) {
   Authors().then(function(authors){
     Promise.all(
       authors.map(function(author){
-        return knex('authors_books').where('author_id', author.id).pluck('book_id').then(function(bookIdArray){
-          return knex('books').whereIn('id', bookIdArray).then(function(books) {
+        return Authors_Books().where('author_id', author.id).pluck('book_id').then(function(bookIdArray){
+          return Books().whereIn('id', bookIdArray).then(function(books) {
             author.books = books
             return author;
           })
